@@ -419,4 +419,35 @@ QUnit.module( "QUnit.module", function() {
 			assert.expect( 9 );
 		} );
 	} );
+
+	QUnit.module( "Improperly invoked hooks", function( hooks ) {
+		QUnit.module( "Nested module with different hooks variable name", function( innerHooks ) {
+			this.outerHookRan = false;
+			try {
+				hooks.beforeEach( function() {
+					this.outerHookRan = true;
+				} );
+			} catch ( e ) {
+				this.beforeEachError = e;
+			}
+
+			this.innerHookRan = false;
+			innerHooks.beforeEach( function() {
+				this.innerHookRan = true;
+			} );
+
+			QUnit.test( "calling parent module's beforeEach errors", function( assert ) {
+				assert.strictEqual( this.beforeEachError.message,
+					"Do not invoke hooks outside of their providing module." );
+				assert.false( this.outerHookRan );
+				assert.true( this.innerHookRan );
+			} );
+		} );
+
+		QUnit.test( "hooks error when invoked during test execution", function( assert ) {
+			assert.throws( function() {
+				hooks.beforeEach( function() { } );
+			}, "Do not invoke hooks outside of their providing module." );
+		} );
+	} );
 } );

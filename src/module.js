@@ -94,6 +94,9 @@ function processModule( name, options, executeNow, modifiers = {} ) {
 
 	function setHookFunction( module, hookName ) {
 		return function setHook( callback ) {
+			if ( config.currentModule !== module ) {
+				throw new Error( "Do not invoke hooks outside of their providing module." );
+			}
 			module.hooks[ hookName ].push( callback );
 		};
 	}
