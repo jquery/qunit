@@ -8,7 +8,7 @@ import fuzzysort from "fuzzysort";
 
 const stats = {
 	passedTests: 0,
-	failedTests: 0,
+	failedTests: [],
 	skippedTests: 0,
 	todoTests: 0
 };
@@ -678,6 +678,52 @@ export function escapeText( s ) {
 		appendInterface();
 	} );
 
+	function getProgressHtml( runtime, stats, total ) {
+		var completed = stats.passedTests +
+			stats.skippedTests +
+			stats.todoTests +
+			stats.failedTests.length;
+
+		return [
+			completed < total ? completed + " / " : "",
+			total,
+			" tests completed in ",
+			runtime,
+			" milliseconds, with ",
+			stats.failedTests.length,
+			" failed, ",
+			stats.skippedTests,
+			" skipped, and ",
+			stats.todoTests,
+			" todo."
+		].join( "" );
+	}
+
+	function getAssertionsSummaryHtml( total, passed, failed ) {
+		return [
+			"<span class='passed'>",
+			passed,
+			"</span> assertions of <span class='total'>",
+			total,
+			"</span> passed, <span class='failed'>",
+			failed,
+			"</span> failed."
+		].join( "" );
+	}
+
+	function getRerunFailedHtml( failedTests ) {
+		if ( failedTests.length === 0 ) {return "";}
+
+		var href = setUrl( { testId: failedTests } );
+		return [
+			"<a href='" + href + "'>",
+			failedTests.length === 1 ?
+				"Rerun 1 failed test" :
+				"Rerun all " + failedTests.length + " failed tests",
+			"</a>"
+		].join( "" );
+	}
+
 	QUnit.done( function( details ) {
 		var banner = id( "qunit-banner" ),
 			tests = id( "qunit-tests" ),
@@ -685,26 +731,12 @@ export function escapeText( s ) {
 			totalTests = stats.passedTests +
 				stats.skippedTests +
 				stats.todoTests +
-				stats.failedTests,
+				stats.failedTests.length,
 			html = [
-				totalTests,
-				" tests completed in ",
-				details.runtime,
-				" milliseconds, with ",
-				stats.failedTests,
-				" failed, ",
-				stats.skippedTests,
-				" skipped, and ",
-				stats.todoTests,
-				" todo.<br />",
-				"<span class='passed'>",
-				details.passed,
-				"</span> assertions of <span class='total'>",
-				details.total,
-				"</span> passed, <span class='failed'>",
-				details.failed,
-				"</span> failed."
-			].join( "" ),
+				getProgressHtml( details.runtime, stats, totalTests ),
+				getAssertionsSummaryHtml( details.total, details.passed, details.failed ),
+				getRerunFailedHtml( stats.failedTests )
+			].filter( Boolean ).join( "<br />" ),
 			test,
 			assertLi,
 			assertList;
@@ -727,7 +759,7 @@ export function escapeText( s ) {
 		}
 
 		if ( banner && ( !abortButton || abortButton.disabled === false ) ) {
-			banner.className = stats.failedTests ? "qunit-fail" : "qunit-pass";
+			banner.className = stats.failedTests.length ? "qunit-fail" : "qunit-pass";
 		}
 
 		if ( abortButton ) {
@@ -744,7 +776,7 @@ export function escapeText( s ) {
 			// use escape sequences in case file gets loaded with non-utf-8
 			// charset
 			document.title = [
-				( stats.failedTests ? "\u2716" : "\u2714" ),
+				( stats.failedTests.length ? "\u2716" : "\u2714" ),
 				document.title.replace( /^[\u2714\u2716] /i, "" )
 			].join( " " );
 		}
@@ -767,29 +799,6 @@ export function escapeText( s ) {
 		return nameHtml;
 	}
 
-	function getProgressHtml( runtime, stats, total ) {
-		var completed = stats.passedTests +
-			stats.skippedTests +
-			stats.todoTests +
-			stats.failedTests;
-
-		return [
-			"<br />",
-			completed,
-			" / ",
-			total,
-			" tests completed in ",
-			runtime,
-			" milliseconds, with ",
-			stats.failedTests,
-			" failed, ",
-			stats.skippedTests,
-			" skipped, and ",
-			stats.todoTests,
-			" todo."
-		].join( "" );
-	}
-
 	QUnit.testStart( function( details ) {
 		var running, bad;
 
@@ -804,11 +813,12 @@ export function escapeText( s ) {
 
 			running.innerHTML = [
 				bad ?
-					"Rerunning previously failed test: <br />" :
-					"Running: <br />",
+					"Rerunning previously failed test:" :
+					"Running:",
 				getNameHtml( details.name, details.module ),
-				getProgressHtml( now() - config.started, stats, Test.count )
-			].join( "" );
+				getProgressHtml( now() - config.started, stats, Test.count ),
+				getRerunFailedHtml( stats.failedTests )
+			].join( "<br />" );
 		}
 
 	} );
@@ -996,7 +1006,7 @@ export function escapeText( s ) {
 			testItem.insertBefore( time, assertList );
 
 			if ( !testPassed ) {
-				stats.failedTests++;
+				stats.failedTests.push( details.testId );
 			} else if ( details.todo ) {
 				stats.todoTests++;
 			} else {
