@@ -136,6 +136,10 @@ module.exports = function( grunt ) {
 				"test/cli/fixtures/only/module.js",
 				"test/cli/fixtures/only/module-flat.js",
 
+				"test/es2018/async-functions.js",
+				"test/es2018/rejects.js",
+				"test/es2018/throws.js"
+
 				// FIXME: These tests use an ugly hack that re-opens
 				// an already finished test run. This only works reliably
 				// via the HTML Reporter thanks to some delays in the bridge.
@@ -149,8 +153,6 @@ module.exports = function( grunt ) {
 				//
 				// "test/module-skip.js",
 				// "test/module-todo.js",
-				"test/es2018/async-functions.js",
-				"test/es2018/throws.js"
 			]
 		}
 	} );

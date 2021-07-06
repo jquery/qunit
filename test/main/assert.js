@@ -614,6 +614,30 @@ QUnit.test( "throws", function( assert ) {
 		},
 		"throws fail when expected function returns false"
 	);
+
+	assert.throws(
+		function() {
+			throw "foo";
+		},
+		2,
+		"throws fails when provided a number"
+	);
+
+	assert.rejects(
+		function() {
+			throw "foo";
+		},
+		false,
+		"throws fails when provided a boolean"
+	);
+
+	assert.rejects(
+		function() {
+			throw "foo";
+		},
+		[],
+		"throws fails when provided an array"
+	);
 } );
 
 QUnit.test( "rejects", function( assert ) {
@@ -659,7 +683,7 @@ QUnit.test( "rejects", function( assert ) {
 	assert.rejects(
 		buildMockPromise( "foo" ),
 		"string matcher",
-		"rejects fails when provided a number"
+		"rejects fails when provided a string"
 	);
 
 	assert.rejects(
