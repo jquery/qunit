@@ -339,9 +339,10 @@ ok 1 module providing hooks > module not providing hooks > has a test
 
 	"qunit async-module-warning/test.js":
 `TAP version 13
-ok 1 resulting parent module > has a test
-1..1
-# pass 1
+ok 1 async module function > has a test
+ok 2 async module function > Correct error thrown from async module function
+1..2
+# pass 2
 # skip 0
 # todo 0
 # fail 0`,
@@ -349,8 +350,9 @@ ok 1 resulting parent module > has a test
 	"qunit async-module-warning/promise-test.js":
 `TAP version 13
 ok 1 module manually returning a promise > has a test
-1..1
-# pass 1
+ok 2 module manually returning a promise > Correct error thrown from module function that returns a promise
+1..2
+# pass 2
 # skip 0
 # todo 0
 # fail 0`,

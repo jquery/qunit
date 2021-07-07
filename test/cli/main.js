@@ -701,21 +701,21 @@ CALLBACK: done`;
 		assert.equal( execution.stdout, expectedOutput[ command ] );
 	} );
 
-	QUnit.test( "warns about unsupported async module callback", async assert => {
+	QUnit.test( "errors on async module callback", async assert => {
 		const command = "qunit async-module-warning/test.js";
 		const execution = await execute( command );
 
 		assert.equal( execution.code, 0 );
-		assert.equal( execution.stderr, "Returning a promise from a module callback is not supported. Instead, use hooks for async behavior. This will become an error in QUnit 3.0.", "The warning shows" );
+		assert.equal( execution.stderr, "" );
 		assert.equal( execution.stdout, expectedOutput[ command ] );
 	} );
 
-	QUnit.test( "warns about unsupported promise return value from module", async assert => {
+	QUnit.test( "errors on promise return value from module", async assert => {
 		const command = "qunit async-module-warning/promise-test.js";
 		const execution = await execute( command );
 
 		assert.equal( execution.code, 0 );
-		assert.equal( execution.stderr, "Returning a promise from a module callback is not supported. Instead, use hooks for async behavior. This will become an error in QUnit 3.0.", "The warning shows" );
+		assert.equal( execution.stderr, "" );
 		assert.equal( execution.stdout, expectedOutput[ command ] );
 	} );
 
