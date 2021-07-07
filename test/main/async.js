@@ -319,18 +319,18 @@ QUnit.module( "assert.async", function() {
 		} );
 	} );
 
+	var inAfterHookModuleState;
 	QUnit.module( "in after hook", {
 		after: function( assert ) {
-			assert.equal( this.state, "done", "called after test callback" );
+			assert.equal( inAfterHookModuleState, "done", "called after test callback" );
 			assert.true( true, "called before expected assert count is validated" );
 		}
 	}, function() {
 		QUnit.test( "call order", function( assert ) {
 			assert.expect( 2 );
-			var done = assert.async(),
-				testContext = this;
+			var done = assert.async();
 			setTimeout( function() {
-				testContext.state = "done";
+				inAfterHookModuleState = "done";
 				done();
 			} );
 		} );

@@ -1,31 +1,37 @@
 QUnit.module( "QUnit.module", function() {
-
+	var hooksOrder = [];
 	QUnit.module( "before/beforeEach/afterEach/after", {
-		before: function() {
+		before: function( assert ) {
+			assert.deepEqual( hooksOrder, [], "No hooks run before before" );
 			this.lastHook = "module-before";
+			hooksOrder.push( "module-before" );
 		},
 		beforeEach: function( assert ) {
-			assert.strictEqual( this.lastHook, "module-before",
+			assert.deepEqual( hooksOrder, [ "module-before" ],
 				"Module's beforeEach runs after before" );
 			this.lastHook = "module-beforeEach";
+			hooksOrder.push( "module-beforeEach" );
 		},
 		afterEach: function( assert ) {
-			assert.strictEqual( this.lastHook, "test-block",
+			assert.deepEqual( hooksOrder, [ "module-before", "module-beforeEach", "test-block" ],
 				"Module's afterEach runs after current test block" );
 			this.lastHook = "module-afterEach";
+			hooksOrder.push( "module-afterEach" );
 		},
 		after: function( assert ) {
-			assert.strictEqual( this.lastHook, "module-afterEach",
+			assert.deepEqual( hooksOrder, [ "module-before", "module-beforeEach", "test-block", "module-afterEach" ],
 				"Module's afterEach runs before after" );
 			this.lastHook = "module-after";
+			hooksOrder.push( "module-after" );
 		}
 	} );
 
 	QUnit.test( "hooks order", function( assert ) {
-		assert.expect( 4 );
+		assert.expect( 5 );
 
-		assert.strictEqual( this.lastHook, "module-beforeEach",
+		assert.deepEqual( hooksOrder, [ "module-before", "module-beforeEach" ],
 			"Module's beforeEach runs before current test block" );
+		hooksOrder.push( "test-block" );
 		this.lastHook = "test-block";
 	} );
 
@@ -285,6 +291,10 @@ QUnit.module( "QUnit.module", function() {
 	QUnit.module( "contained suite `this`", function( hooks ) {
 		this.outer = 1;
 
+		hooks.before( function() {
+			this.outerBefore = 10;
+		} );
+
 		hooks.beforeEach( function() {
 			this.outer++;
 		} );
@@ -309,7 +319,13 @@ QUnit.module( "QUnit.module", function() {
 		QUnit.module( "nested suite `this`", function( hooks ) {
 			this.inner = true;
 
+			hooks.before( function() {
+				this.innerBefore = 20;
+			} );
+
 			hooks.beforeEach( function( assert ) {
+				assert.strictEqual( this.outerBefore, 10 );
+				assert.strictEqual( this.innerBefore, 20 );
 				assert.strictEqual( this.outer, 2 );
 				assert.true( this.inner );
 			} );
@@ -334,13 +350,15 @@ QUnit.module( "QUnit.module", function() {
 		} );
 	} );
 
+	var lastRunHook;
 	QUnit.module( "nested modules before/after", {
 		before: function( assert ) {
 			assert.true( true, "before hook ran" );
 			this.lastHook = "before";
+			lastRunHook = "before";
 		},
 		after: function( assert ) {
-			assert.strictEqual( this.lastHook, "outer-after" );
+			assert.strictEqual( lastRunHook, "outer-after" );
 		}
 	}, function() {
 		QUnit.test( "should run before", function( assert ) {
@@ -352,10 +370,11 @@ QUnit.module( "QUnit.module", function() {
 			before: function( assert ) {
 				assert.true( true, "outer before hook ran" );
 				this.lastHook = "outer-before";
+				lastRunHook = "outer-before";
 			},
 			after: function( assert ) {
-				assert.strictEqual( this.lastHook, "outer-test" );
-				this.lastHook = "outer-after";
+				assert.strictEqual( lastRunHook, "outer-test" );
+				lastRunHook = "outer-after";
 			}
 		}, function() {
 			QUnit.module( "inner", {
@@ -364,7 +383,7 @@ QUnit.module( "QUnit.module", function() {
 					this.lastHook = "inner-before";
 				},
 				after: function( assert ) {
-					assert.strictEqual( this.lastHook, "inner-test" );
+					assert.strictEqual( lastRunHook, "inner-test" );
 				}
 			}, function() {
 				QUnit.test( "should run outer-before and inner-before", function( assert ) {
@@ -374,13 +393,13 @@ QUnit.module( "QUnit.module", function() {
 
 				QUnit.test( "should run inner-after", function( assert ) {
 					assert.expect( 1 );
-					this.lastHook = "inner-test";
+					lastRunHook = "inner-test";
 				} );
 			} );
 
 			QUnit.test( "should run outer-after and after", function( assert ) {
 				assert.expect( 2 );
-				this.lastHook = "outer-test";
+				lastRunHook = "outer-test";
 			} );
 		} );
 	} );

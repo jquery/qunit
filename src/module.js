@@ -43,10 +43,10 @@ function createModule( name, testEnvironment, modifiers ) {
 		ignored: modifiers.ignored || false
 	};
 
-	const env = {};
+	let env = {};
 	if ( parentModule ) {
 		parentModule.childModules.push( module );
-		extend( env, parentModule.testEnvironment );
+		env = Object.create( parentModule.testEnvironment || {} );
 	}
 	extend( env, testEnvironment );
 	module.testEnvironment = env;
