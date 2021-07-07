@@ -60,6 +60,28 @@ extend( QUnit, {
 	skip: test.skip,
 	only: test.only,
 
+	restart() {
+		ProcessingQueue.finished = false;
+		globalStartCalled = false;
+		runStarted = false;
+
+		config.queue.length = 0;
+		config.modules.length = 0;
+		config.autostart = false;
+
+		[
+			"stats", "started", "updateRate", "filter", "depth", "current",
+			"pageLoaded", "timeoutHandler", "timeout", "pollution"
+		].forEach( ( key ) => delete config[ key ] );
+
+		const suiteReport = config.currentModule.suiteReport;
+
+		suiteReport.childSuites.length = 0;
+		delete suiteReport._startTime;
+		delete suiteReport._endTime;
+
+		config.modules.push( config.currentModule );
+	},
 	start: function( count ) {
 
 		if ( config.current ) {
