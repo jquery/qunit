@@ -13,6 +13,31 @@ export default ( function() {
 		return obj.__proto__;
 	};
 
+	function lookupDescriptor( obj, keyName ) {
+		let current = obj;
+		do {
+			const descriptor = Object.getOwnPropertyDescriptor( current, keyName );
+			if ( descriptor !== undefined ) {
+				return descriptor;
+			}
+			current = getProto( current );
+		} while ( current !== null );
+		return null;
+	}
+
+	function hasSharedDescriptor( a, b, keyName ) {
+		var aDescriptor = lookupDescriptor( a, keyName );
+		var bDescriptor = lookupDescriptor( b, keyName );
+
+		return ( aDescriptor !== null && bDescriptor !== null ) &&
+			aDescriptor.value === bDescriptor.value &&
+			aDescriptor.get === bDescriptor.get &&
+			aDescriptor.set === bDescriptor.set &&
+			aDescriptor.writable === bDescriptor.writable &&
+			aDescriptor.configurable === bDescriptor.configurable &&
+			aDescriptor.enumerable === bDescriptor.enumerable;
+	}
+
 	function useStrictEquality( a, b ) {
 
 		// This only gets called if a and b are not strict equal, and is used to compare on
@@ -262,15 +287,29 @@ export default ( function() {
 				aProperties.push( i );
 
 				// Skip OOP methods that look the same
+				var hasValidConstructor = a.constructor !== Object &&
+					typeof a.constructor !== "undefined";
+
 				if (
-					a.constructor !== Object &&
-					typeof a.constructor !== "undefined" &&
-					typeof a[ i ] === "function" &&
-					typeof b[ i ] === "function" &&
-					a[ i ].toString() === b[ i ].toString()
+					hasValidConstructor &&
+					(
+						(
+
+							// Skip own functions with same definition
+							hasOwnProperty.call( a, i ) &&
+							typeof a[ i ] === "function" &&
+							typeof b[ i ] === "function" &&
+							a[ i ].toString() === b[ i ].toString()
+						) || (
+
+							// Skip shared inherited functions
+							hasSharedDescriptor( a, b, i )
+						)
+					)
 				) {
 					continue;
 				}
+
 
 				// Compare non-containers; queue non-reference-equal containers
 				if ( !breadthFirstCompareChild( a[ i ], b[ i ] ) ) {

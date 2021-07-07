@@ -1679,6 +1679,21 @@ QUnit.test( "Compare structures with multiple references to the same containers"
 	assert.equal( QUnit.equiv( { big: x, z: [ true ] }, { big: y, z: [ false ] } ), false, "Nonequivalent structures" );
 } );
 
+QUnit.test( "Compare instances with getters", function( assert ) {
+	function Foo( a ) {
+		this.a = a === undefined ? 1 : a;
+	}
+
+	Object.defineProperty( Foo.prototype, "b", {
+		enumerable: true,
+		get() {
+			return new Foo( this.a + 1 );
+		}
+	} );
+
+	assert.deepEqual( new Foo(), new Foo(), "inherited getters are not included in computation" );
+} );
+
 QUnit.test( "Test that must be done at the end because they extend some primitive's prototype",
 	function( assert ) {
 
